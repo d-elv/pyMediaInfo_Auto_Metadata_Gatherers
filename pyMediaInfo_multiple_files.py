@@ -37,6 +37,7 @@ accepted_file_types = [
                     '.tiff', 
                     '.wmv', 
                     '.mkv',
+                    '.m4v',
                     ]
 
 
@@ -124,9 +125,18 @@ def get_root_length():
         return root_length, folder_name_for_output_file
 
 while True:
-
+    choice = ""
     print('-'*60)
     print()
+    while True:
+        print("For the next prompt, please type 'y' or 'n' ")
+        choice = input("Would you like to perform a deep scan? (y/n): ")
+        choice = choice.lower()
+        if choice == "y" or choice == "n":
+            break
+        else:
+            continue
+
     input_directory = input('Please drag in a folder to scan its files: ')
 
     if illegal_apostrophe.search(input_directory):
@@ -156,8 +166,10 @@ while True:
             
             current_root_split = root.split("\\")
             
-            if len(current_root_split) > root_length:
-                continue
+            if choice == "n":
+                if len(current_root_split) > root_length:
+                    continue
+            
             if ghost_file_pattern.match(file):
                 continue
 

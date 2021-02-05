@@ -153,10 +153,10 @@ while True:
             
             today = get_date()
             simplified_file_list.append("File_Name: " + file_name)
+            simplified_file_list.append("File_Path: " + file_path)
             simplified_file_list.append("Date_Received: " + today)
             simplified_file_list.append("Texted_Subbed_Watermarked: ")
             simplified_file_list.append("File_Size: " + file_size_formatted)
-            simplified_file_list.append("File_Path: " + file_path)
             simplified_file_list.append("Duration: " + file_duration_formatted)
 
 
