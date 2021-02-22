@@ -4,7 +4,7 @@ import time
 import re 
 import os
 
-LOG_DIRECTORY = "\\\\10.10.52.250\\dropzone\\CTA\\09 SCRIPTS FOR CTA USE\\PyMediaInfo_single_files\\LOGGED_OUTPUT"
+LOG_DIRECTORY = "\\\\10.10.52.250\\dropzone\\CTA\\08 PYTHON PROGRAMS\\02_PYMEDIAINFO\\01_Single_File\\LOGGED OUTPUT"
 
 print("""Hello! Treat this program like MediaInfo, drag in files (literally 
 click and drag), and then your chosen file's metadata will be written to a 
@@ -132,19 +132,23 @@ while True:
         if track.track_type == "General":
             
             # Gets file name on its own
-            file_name = track.complete_name
-            file_name = file_name.replace("\\", "/")
-            file_name = file_name.split("/")
-            file_name = file_name[-1]
+            file_name = get_file_name(track.complete_name)
             file_path = track.complete_name
 
             file_name_for_output_file = file_name[:-4]
 
+            file_size_raw = track.file_size
+            if track.file_size == 0 or track.file_size == None:
+                print(f"{file_name} is a corrupt file, please ", end="")
+                print(f"investigate, resupply and try scanning again.")
+                break
+            else:
+                pass
+
+
             file_duration_seconds = track.duration
             file_duration_formatted = format_milliseconds(file_duration_seconds)
-            file_size_formatted = format_file_size(track.file_size)
-            
-            
+            file_size_formatted = format_file_size(file_size_raw)
 
             writing_to_file_list.append("File Name: " + file_name)
             writing_to_file_list.append("File Size: " + file_size_formatted)
@@ -173,18 +177,23 @@ while True:
             try:
                 bit_rate = format_bit_rate(track.bit_rate)
             except:
-                bit_rate = "Could not acquire Bit Rate"
+                bit_rate = "Could not acquire"
 
             if track.frame_rate == None:
                 frame_rate = track.original_frame_rate
             else:
                 frame_rate = track.frame_rate
 
+            if track.format_profile == None:
+                format_profile = track.codec_id
+            else:
+                format_profile = track.format_profile
+
             writing_to_file_list.append("Frame Size: " + frame_size)
             writing_to_file_list.append("Aspect Ratio: " + aspect_ratio)
             writing_to_file_list.append("Frame Rate: " + frame_rate)
             writing_to_file_list.append("Video Codec: " + track.format)
-            writing_to_file_list.append("Video Format Profile: " + track.format_profile)
+            writing_to_file_list.append("Video Format Profile: " + format_profile)
             writing_to_file_list.append("Colour Space: " + colour_space)
             writing_to_file_list.append("Bit Rate: " + bit_rate)
 
@@ -212,23 +221,29 @@ while True:
     writing_to_file_list.append("No. of Audio Tracks per Channel, in order: " + str(no_of_audio_channels)[1:-1])
 
     if len(channel_layout_list) > 0 and None not in channel_layout_list:
-        writing_to_file_list.append("Track Layout: " + str(channel_layout_list))
+        writing_to_file_list.append("Track Layout: " + str(channel_layout_list)[2:-2])
 
     print("-"*60)
 
-    os.chdir(LOG_DIRECTORY)
-    with open(file_name_for_output_file + "_MediaInfo_Output.txt", "w" ) as log_file:
-            
-        for attribute in writing_to_file_list:
-            log_file.write(str(attribute))
-            log_file.write("\n")
+    def write_log():
+        os.chdir(LOG_DIRECTORY)
+        with open(file_name_for_output_file + "_MediaInfo_Output.txt", "w" ) as log_file:
+                
+            for attribute in writing_to_file_list:
+                log_file.write(str(attribute))
+                log_file.write("\n")
 
-        log_file.write("\n"*2)
-        log_file.write("SIMPLIFIED - COPY THIS TO CLICKUP\n")
+            log_file.write("\n"*2)
+            log_file.write("SIMPLIFIED - COPY THIS TO CLICKUP\n")
 
-        for attribute in simplified_file_list:
-            log_file.write(str(attribute))
-            log_file.write("\n")
+            for attribute in simplified_file_list:
+                log_file.write(str(attribute))
+                log_file.write("\n")
 
-    print("Your file's metadata has been written to a text file to ", end="")
-    print(f"copy from here: {LOG_DIRECTORY}\n")
+        print("Your file's metadata has been written to a text file to ", end="")
+        print(f"copy from here: {LOG_DIRECTORY}\n")
+    
+    if file_size_raw == 0 or file_size_raw == None:
+        pass
+    else:
+        write_log()

@@ -4,7 +4,7 @@ import time
 import re 
 import os
 
-LOG_DIRECTORY = "\\\\10.10.52.250\\dropzone\\CTA\\09 SCRIPTS FOR CTA USE\\pyMediaInfo_multiple_files\\LOGGED OUTPUT"
+LOG_DIRECTORY = "\\\\10.10.52.250\\dropzone\\CTA\\08 PYTHON PROGRAMS\\02_PYMEDIAINFO\\02_Multiple_Files\\LOGGED_OUTPUT"
 text_file_underscores = "_" * 50
 
 print("""Hello! Treat this program like MediaInfo, but for folders! Drag in the 
@@ -150,6 +150,8 @@ while True:
 
         log_file.write(f"FOLDER NAME: {folder_name_for_output_file}\n\n")
 
+    file_count = 0
+    error_count = 0
     for root, dir_path, files in os.walk(input_directory):
         for file in files:
             
@@ -180,7 +182,8 @@ while True:
                 file_media_info = MediaInfo.parse(file_path)
             except FileNotFoundError:
                 print("Your file path is incorrect or your filename ", end="")
-                print("is missing its extension, please try again. ") 
+                print("is missing its extension, please try again. ")
+                
                 break
             
             for track in file_media_info.tracks:
@@ -191,10 +194,19 @@ while True:
                     file_name = file_name.split('/')
                     file_name = file_name[-1]
                     current_file_path = track.complete_name
+                    
+                    file_size_raw = track.file_size
+                    if track.file_size == 0 or track.file_size == None:
+                        print(f"{file_name} is a corrupt file, please ", end="")
+                        print(f"investigate, resupply and try scanning again.")
+                        error_count += 1
+                        break
+                    else:
+                        pass
 
                     file_duration_seconds = track.duration
                     file_duration_formatted = format_milliseconds(file_duration_seconds)
-                    file_size_formatted = format_file_size(track.file_size)
+                    file_size_formatted = format_file_size(file_size_raw)
 
                     writing_to_file_list.append("File Name: " + file_name) 
                     writing_to_file_list.append("File Size: " + file_size_formatted)
@@ -228,11 +240,16 @@ while True:
                     else:
                         frame_rate = track.frame_rate
 
+                    if track.format_profile == None:
+                        format_profile = track.codec_id
+                    else:
+                        format_profile = track.format_profile
+
                     writing_to_file_list.append("Frame Size: " + frame_size)
                     writing_to_file_list.append("Aspect Ratio: " + aspect_ratio)
                     writing_to_file_list.append("Frame Rate: " + frame_rate)
                     writing_to_file_list.append("Video Codec: " + track.format)
-                    writing_to_file_list.append("Video Format Profile: " + track.format_profile)
+                    writing_to_file_list.append("Video Format Profile: " + format_profile)
                     writing_to_file_list.append("Colour Space: " + colour_space)
                     writing_to_file_list.append("Bit Rate: " + str(bit_rate))
 
@@ -261,22 +278,48 @@ while True:
             if len(channel_layout_list) > 0 and None not in channel_layout_list:
                 writing_to_file_list.append("Track Layout: " + str(channel_layout_list))
 
-            os.chdir(LOG_DIRECTORY)
-            with open(folder_name_for_output_file + "_MediaInfo_Output.txt", "a") as log_file:
+            def write_log():
+                os.chdir(LOG_DIRECTORY)
+                with open(folder_name_for_output_file + "_MediaInfo_Output.txt", "a") as log_file:
 
-                for attribute in writing_to_file_list:
-                    log_file.write(str(attribute))
+                    for attribute in writing_to_file_list:
+                        log_file.write(str(attribute))
+                        log_file.write("\n")
+
                     log_file.write("\n")
+                    log_file.write("SIMPLIFIED - COPY THIS TO CLICKUP\n")
 
-                log_file.write("\n")
-                log_file.write("SIMPLIFIED - COPY THIS TO CLICKUP\n")
+                    for attribute in simplified_file_list:
+                        log_file.write(str(attribute))
+                        log_file.write("\n")
 
-                for attribute in simplified_file_list:
-                    log_file.write(str(attribute))
+                    log_file.write(text_file_underscores)
+                    log_file.write("\n"*2)
+            file_count += 1
+            if file_size_raw == 0 or file_size_raw == None:
+                with open(folder_name_for_output_file + "_MediaInfo_Output.txt", "a") as log_file:
+
                     log_file.write("\n")
-
-                log_file.write(text_file_underscores)
-                log_file.write("\n"*2)
+                    log_file.write("!"*60)
+                    log_file.write("\n")
+                    log_file.write(file_name)
+                    log_file.write(" is a corrupt file. Please resupply and rescan.\n")
+                    log_file.write(file_path)
+                    log_file.write("\n")
+                    log_file.write("!"*60)
+                    log_file.write("\n")
+                    log_file.write(text_file_underscores)
+                    log_file.write("\n"*3)
+            else:
+                write_log()
             
-    print(f"Your folder's metadata has been written to a text file ", end="")
+    with open(folder_name_for_output_file + "_MediaInfo_Output.txt", "a") as log_file:
+        log_file.write("Total files in selection: " + str(file_count))
+        log_file.write("Total errors in selection: " + str(error_count))
+
+    print(f"\nYour folder's metadata has been written to a text file ", end="")
     print(f"to copy from here: {LOG_DIRECTORY}\n")
+    print(f"\nTotal files scanned for this folder: {file_count}")
+    print(f"Total error files for this folder: {error_count}")
+
+
