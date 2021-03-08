@@ -350,7 +350,7 @@ def get_file_metadata(input_file):
 def finishing_message(output_type, file_count, error_count):
     print("-"*60)
     print(f"Your {output_type}'s metadata has been written to ", end="")
-    print(f"a text file to copy from here: {LOG_DIRECTORY}\\{name_for_output_file}\n")
+    print(f"a text file to copy from here: {LOG_DIRECTORY}\n")
 
     if file_count == 0 and error_count == 0:
         pass
